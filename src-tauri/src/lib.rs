@@ -170,6 +170,26 @@ fn kill_process(pid: i32, force: bool) -> Result<(), String> {
     }
 }
 
+#[tauri::command]
+fn reveal_in_finder(path: String) -> Result<(), String> {
+    if path.is_empty() {
+        return Err("no path".into());
+    }
+    // `open -R` reveals (and selects) the item in Finder.
+    Command::new("/usr/bin/open")
+        .arg("-R")
+        .arg(&path)
+        .status()
+        .map_err(|e| format!("open failed: {e}"))
+        .and_then(|s| {
+            if s.success() {
+                Ok(())
+            } else {
+                Err(format!("open exited with status {s}"))
+            }
+        })
+}
+
 fn show_main_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.show();
@@ -181,9 +201,12 @@ fn show_main_window(app: &tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![list_ports, kill_process])
+        .invoke_handler(tauri::generate_handler![
+            list_ports,
+            kill_process,
+            reveal_in_finder
+        ])
         .on_window_event(|window, event| {
             // Closing the window keeps the app alive in the menu bar instead of quitting.
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

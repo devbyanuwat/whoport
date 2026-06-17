@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { revealItemInDir, openPath } from "@tauri-apps/plugin-opener";
 import { ask } from "@tauri-apps/plugin-dialog";
 import {
   RefreshCw,
@@ -120,15 +119,9 @@ function App() {
     async (path: string) => {
       if (!path) return;
       try {
-        await revealItemInDir(path);
+        await invoke("reveal_in_finder", { path });
       } catch (e) {
-        // Fall back to opening the containing folder, then report if that fails too.
-        try {
-          const dir = path.replace(/\/[^/]*$/, "");
-          await openPath(dir);
-        } catch (e2) {
-          showToast(`Could not reveal ${path}: ${e2}`, "error");
-        }
+        showToast(`Could not reveal ${path}: ${e}`, "error");
       }
     },
     [showToast]
