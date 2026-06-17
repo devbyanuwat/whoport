@@ -6,6 +6,22 @@ and shows which application owns it — name, PID, full executable path, and use
 
 Useful when you forget which app you left running on a port.
 
+## Install
+
+Download the latest `.dmg` from the
+[Releases](https://github.com/devbyanuwat/whoport/releases) page, open it, and
+drag the app to Applications.
+
+The build is **not code-signed** (no Apple Developer certificate), so on first
+launch macOS blocks it as "from an unidentified developer" or "damaged". To open
+it once:
+
+- Right-click the app in Finder, choose **Open**, then **Open** again, or
+- Run in Terminal: `xattr -dr com.apple.quarantine "/Applications/Port Scanner.app"`
+
+After that it opens normally. The app lives in the menu bar with no Dock icon;
+quit it from the tray menu.
+
 ## How it works
 
 - `lsof -nP -iTCP -sTCP:LISTEN` finds listening TCP ports and their owning PID.
@@ -42,8 +58,18 @@ npm run tauri dev
 npm run tauri build
 ```
 
-The signed/unsigned `.app` and `.dmg` land in
-`src-tauri/target/release/bundle/`.
+The `.app` and `.dmg` land in `src-tauri/target/release/bundle/`.
+
+## Releasing
+
+Pushing a version tag triggers `.github/workflows/release.yml`, which builds a
+universal (Intel + Apple Silicon) bundle on a macOS runner and publishes it to a
+GitHub Release automatically:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
 
 ## Requirements
 

@@ -1,0 +1,52 @@
+name: release
+
+# Push a version tag to build and publish a release:
+#   npm version patch           # bumps package.json + creates a commit
+#   git tag v0.2.0 && git push origin v0.2.0
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust (Intel + Apple Silicon targets)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Cache cargo
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build and publish release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "whoport ${{ github.ref_name }}"
+          releaseBody: |
+            macOS menu bar app that shows which app is holding each listening TCP port.
+
+            This build is not code-signed. On first launch, right-click the app
+            and choose Open, or run:
+            `xattr -dr com.apple.quarantine "/Applications/Port Scanner.app"`
+          releaseDraft: false
+          prerelease: false
+          args: --target universal-apple-darwin
