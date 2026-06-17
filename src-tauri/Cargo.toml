@@ -1,6 +1,6 @@
 [package]
 name = "port-scanner"
-version = "0.1.0"
+version = "0.1.1"
 description = "Scan listening ports on macOS and show which app owns each one"
 authors = ["anuwatttttt"]
 edition = "2021"
